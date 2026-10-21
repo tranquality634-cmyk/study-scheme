@@ -32,6 +32,16 @@ input[type=text],input:not([type]),textarea{background:var(--surface);border:1px
 .mv{display:flex;gap:4px}
 .mv button{font-size:13px;padding:3px 12px;background:var(--surface)}
 .mv button:disabled{opacity:.4;cursor:default}
+.grp{display:flex;flex-wrap:wrap;align-items:center;gap:2px 18px;margin:8px 0 6px}
+.gtab{border:0;border-bottom:2px solid transparent;border-radius:0;padding:2px 0;color:var(--mute);background:none}
+.gtab:hover{background:none}
+.gtab small{opacity:.7;margin-left:2px}
+.gtab.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.gt{display:flex;gap:4px;margin-left:auto}
+.gt button{font-size:12px;color:var(--mute);padding:1px 8px}
+.gt button:disabled{opacity:.4;cursor:default}
+.gs{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
+.gs select{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:3px 6px;color:var(--ink)}
 .prog{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:0 0 14px}
 .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--lec),var(--hw))}
 h1{font:600 2rem/1.25 "Songti SC","Noto Serif SC","Source Han Serif SC",serif;margin:22px 0 2px;outline:none}
@@ -99,12 +109,18 @@ mk('SQL','lab12、hw10、hw11')];
 var S=null;
 try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
 if(!S||!Array.isArray(S.courses)||!S.courses.length){S={active:0,courses:[{name:'CS61A',units:SEED}]}}
+S.groups=Array.isArray(S.groups)?S.groups:[];S.courses.forEach(function(x){x.g=typeof x.g==='string'?x.g:''});
+if(!S.gm){S.gm=1;if(!S.courses.some(function(x){return x.g})){
+ var GM={'数学分析':'数理基础课','概率论与数理统计':'数理基础课','离散':'数理基础课','离散数学':'数理基础课','复分析':'数理基础课','数据结构':'计算机专业课','数据库':'计算机专业课','C/C++':'计算机专业课','CET-6':'英语','大雾':'大雾','CMC':'CMC'};
+ S.courses.forEach(function(x){x.g=GM[x.name]||''});S.groups=['数理基础课','计算机专业课','英语','大雾','CMC'];save()}}
 var openNote={},editing=-1,armed='',msg='',addingC=false,focusAdd=false;
 function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function url(s){s=String(s||'').trim();return /^https?:\/\//i.test(s)?s:''}
 function cur(){return S.courses[Math.min(S.active,S.courses.length-1)]}
 function pc(x){var t=0,d=0;x.units.forEach(function(u){t+=2;d+=(u.ld?1:0)+(u.hd?1:0)});return t?Math.round(d/t*100):0}
+function gs(){var a=S.groups.filter(function(g){return S.courses.some(function(x){return x.g===g})});S.courses.forEach(function(x){if(a.indexOf(x.g)<0)a.push(x.g)});return a}
+function mem(g){var r=[];S.courses.forEach(function(x,i){if(x.g===g)r.push(i)});return r}
 function item(u,i,k){
  var lec=k==='lec',d=lec?u.ld:u.hd,t=lec?u.lec:u.hw,l=url(lec?u.lecUrl:u.hwUrl);
  return '<div class="col"><label class="it '+(lec?'lec':'hw')+(d?' done':'')+'"><input type="checkbox" data-a="tg" data-i="'+i+'" data-k="'+(lec?'ld':'hd')+'"'+(d?' checked':'')+'><span class="tx">'+esc(t||'（未填写）')+'</span></label>'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">打开链接</a>':'')+'</div>';
@@ -117,12 +133,15 @@ function R(){
  var c=cur(),U=c.units,n=U.length,done=0,h='';
  U.forEach(function(u){done+=(u.ld?1:0)+(u.hd?1:0)});
  var pct=n?Math.round(done/(2*n)*100):0;
- var ci=S.courses.indexOf(c),L=S.courses.length;
- h+='<div class="bar"><nav class="tabs" id="tabs">'+S.courses.map(function(x,i){return '<button class="tab'+(x===c?' on':'')+'" data-a="tab" data-i="'+i+'">'+esc(x.name)+'<i style="width:'+pc(x)+'%"></i></button>'}).join('')+'</nav>'+
+ var ci=S.courses.indexOf(c),g=c.g,G=gs(),NG=G.filter(Boolean),gi=NG.indexOf(g),m=mem(g),pi=m.indexOf(ci),O=G.indexOf('')<0?G.concat(['']):G;
+ h+='<div class="grp">'+G.map(function(k,i){return '<button class="gtab'+(k===g?' on':'')+'" data-a="grp" data-i="'+i+'">'+esc(k||'其他')+' <small>'+mem(k).length+'</small></button>'}).join('')+
+ (g?'<span class="gt"><button data-a="grn">改名</button><button data-a="gml" title="分组前移"'+(gi>0?'':' disabled')+'>‹</button><button data-a="gmr" title="分组后移"'+(gi<NG.length-1?'':' disabled')+'>›</button></span>':'')+'</div>';
+ h+='<div class="bar"><nav class="tabs" id="tabs">'+S.courses.map(function(x,i){if(x.g!==g)return '';return '<button class="tab'+(x===c?' on':'')+'" data-a="tab" data-i="'+i+'">'+esc(x.name)+'<i style="width:'+pc(x)+'%"></i></button>'}).join('')+'</nav>'+
  '<button class="plus'+(addingC?' on':'')+'" data-a="addc" aria-label="'+(addingC?'收起添加课程':'添加课程')+'" aria-expanded="'+addingC+'">'+(addingC?'×':'+')+'</button></div>';
  if(addingC)h+='<form class="addc" data-f="course"><input name="n" placeholder="新课程名称" maxlength="30"><button>添加</button></form>';
  h+='<div class="head"><h1 contenteditable="true" spellcheck="false" data-a="title" aria-label="课程名称，点击可修改">'+esc(c.name)+'</h1>'+
- (L>1?'<span class="mv"><button data-a="mvl"'+(ci>0?'':' disabled')+'>← 前移</button><button data-a="mvr"'+(ci<L-1?'':' disabled')+'>后移 →</button></span>':'')+'</div>';
+ (m.length>1?'<span class="mv"><button data-a="mvl"'+(pi>0?'':' disabled')+'>← 前移</button><button data-a="mvr"'+(pi<m.length-1?'':' disabled')+'>后移 →</button></span>':'')+
+ '<label class="gs">分组<select data-a="gsel">'+O.map(function(k){return '<option value="'+esc(k)+'"'+(k===g?' selected':'')+'>'+esc(k||'其他')+'</option>'}).join('')+'<option value="__new">＋ 新建分组…</option></select></label></div>';
  h+='<p class="sum">已完成 '+done+' / '+(2*n)+' 项，共 '+pct+'%</p><div class="prog"><i style="width:'+pct+'%"></i></div>';
  if(n){
   h+='<div class="strip">'+U.map(function(u,i){return '<button class="cell" data-a="go" data-i="'+i+'" title="单元 '+(i+1)+'：'+esc(u.lec)+'" aria-label="跳到单元 '+(i+1)+'"><i class="'+(u.ld?'f':'')+'"></i><i class="'+(u.hd?'f':'')+'"></i></button>'}).join('')+'</div>';
@@ -156,7 +175,10 @@ document.addEventListener('click',function(e){
  var a=b.dataset.a,i=+b.dataset.i,c=cur();
  if(a==='tab'){S.active=i;editing=-1;openNote={};armed=''}
  else if(a==='addc'){addingC=!addingC;focusAdd=addingC}
- else if(a==='mvl'||a==='mvr'){var j=S.courses.indexOf(c),t=j+(a==='mvl'?-1:1);if(t<0||t>=S.courses.length)return;S.courses.splice(t,0,S.courses.splice(j,1)[0]);S.active=t;armed='';save()}
+ else if(a==='mvl'||a==='mvr'){var j=S.courses.indexOf(c),mm=mem(c.g),pp=mm.indexOf(j)+(a==='mvl'?-1:1);if(pp<0||pp>=mm.length)return;var t=mm[pp],sw=S.courses[j];S.courses[j]=S.courses[t];S.courses[t]=sw;S.active=t;armed='';save()}
+ else if(a==='grp'){var f=mem(gs()[i])[0];if(f!=null)S.active=f;editing=-1;openNote={};armed=''}
+ else if(a==='grn'){var o=c.g,nn=prompt('分组名称',o);nn=nn&&nn.trim().slice(0,20);if(!nn||nn===o)return;var L2=gs().filter(Boolean).map(function(k){return k===o?nn:k});S.courses.forEach(function(x){if(x.g===o)x.g=nn});S.groups=L2.filter(function(k,z){return L2.indexOf(k)===z});save()}
+ else if(a==='gml'||a==='gmr'){var L3=gs().filter(Boolean),g3=L3.indexOf(c.g),w=g3+(a==='gml'?-1:1);if(g3<0||w<0||w>=L3.length)return;var tp=L3[g3];L3[g3]=L3[w];L3[w]=tp;S.groups=L3;save()}
  else if(a==='go'){var el=document.getElementById('u'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});return}
  else if(a==='note'){openNote[i]=!openNote[i]}
  else if(a==='ed'){editing=i}
@@ -167,13 +189,14 @@ document.addEventListener('click',function(e){
  else if(a==='delc'){if(armed==='c'){S.courses.splice(S.active,1);S.active=0;armed='';save()}else{armed='c'}}
  else if(a==='imp'){try{var d=JSON.parse(document.getElementById('bk').value);
   if(!d||!Array.isArray(d.courses)||!d.courses.length)throw 0;
-  d.courses.forEach(function(x){if(typeof x.name!=='string'||!Array.isArray(x.units))throw 0;x.units=x.units.map(function(u){return{lec:String(u.lec||''),lecUrl:url(u.lecUrl),hw:String(u.hw||''),hwUrl:url(u.hwUrl),ld:u.ld?1:0,hd:u.hd?1:0,note:String(u.note||'')}})});
-  d.active=0;S=d;editing=-1;openNote={};save()}catch(x){msg='数据格式不对，没有导入。';R();return}}
+  d.courses.forEach(function(x){if(typeof x.name!=='string'||!Array.isArray(x.units))throw 0;x.g=typeof x.g==='string'?x.g.slice(0,20):'';x.units=x.units.map(function(u){return{lec:String(u.lec||''),lecUrl:url(u.lecUrl),hw:String(u.hw||''),hwUrl:url(u.hwUrl),ld:u.ld?1:0,hd:u.hd?1:0,note:String(u.note||'')}})});
+  d.active=0;d.groups=Array.isArray(d.groups)?d.groups.map(String):[];d.gm=1;S=d;editing=-1;openNote={};save()}catch(x){msg='数据格式不对，没有导入。';R();return}}
  else return;
  R();
 });
 document.addEventListener('change',function(e){
- var t=e.target;if(t.dataset.a!=='tg')return;
+ var t=e.target;if(t.dataset.a==='gsel'){var v=t.value;if(v==='__new'){v=prompt('新分组名称');v=v&&v.trim().slice(0,20);if(!v){R();return}S.groups=gs().filter(Boolean);if(S.groups.indexOf(v)<0)S.groups.push(v)}cur().g=v;save();R();return}
+ if(t.dataset.a!=='tg')return;
  cur().units[+t.dataset.i][t.dataset.k]=t.checked?1:0;save();R();
 });
 document.addEventListener('input',function(e){
@@ -187,7 +210,7 @@ document.addEventListener('keydown',function(e){
 });
 document.addEventListener('submit',function(e){
  e.preventDefault();var f=e.target,k=f.dataset.f;
- if(k==='course'){var n=f.n.value.trim();if(!n)return;S.courses.push({name:n.slice(0,30),units:[]});S.active=S.courses.length-1;editing=-1;openNote={};addingC=false}
+ if(k==='course'){var n=f.n.value.trim();if(!n)return;S.courses.push({name:n.slice(0,30),units:[],g:cur().g});S.active=S.courses.length-1;editing=-1;openNote={};addingC=false}
  else if(k==='unit'){var l=f.lec.value.trim(),w=f.hw.value.trim();if(!l&&!w)return;cur().units.push({lec:l,lecUrl:'',hw:w,hwUrl:'',ld:0,hd:0,note:''})}
  else return;
  save();R();
