@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>课程学习进度</title>
+<style>
+:root{--bg:#f3f5f8;--surface:#fff;--ink:#1c2430;--mute:#69747f;--line:#d8dee5;--lec:#2455c3;--hw:#1f8a6a;--warn:#b3402a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--surface:#171e27;--ink:#e6ebf1;--mute:#93a0ad;--line:#2a3441;--lec:#6f97f0;--hw:#4cc29d;--warn:#f0907a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10151c;--surface:#171e27;--ink:#e6ebf1;--mute:#93a0ad;--line:#2a3441;--lec:#6f97f0;--hw:#4cc29d;--warn:#f0907a;color-scheme:dark}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 12px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:880px;margin:0 auto;padding:16px 16px 56px}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:1px solid var(--line);border-radius:6px;padding:3px 10px}
+button:hover{border-color:var(--mute)}
+:focus-visible{outline:2px solid var(--lec);outline-offset:2px}
+input[type=text],input:not([type]),textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px;width:100%}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;align-items:center}
+.tab{white-space:nowrap}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.addc{display:flex;gap:6px;margin-left:auto;min-width:220px}
+h1{font:600 2rem/1.25 "Songti SC","Noto Serif SC","Source Han Serif SC",serif;margin:22px 0 2px;outline:none}
+.sum{margin:0 0 14px;color:var(--mute)}
+.strip{display:flex;flex-wrap:wrap;gap:4px}
+.cell{display:flex;flex-direction:column;gap:2px;padding:0;border:0;width:22px}
+.cell i{display:block;height:13px;border-radius:2px;background:var(--line)}
+.cell i:first-child.f{background:var(--lec)}
+.cell i:last-child.f{background:var(--hw)}
+.legend{margin:8px 0 26px;font-size:13px;color:var(--mute)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px}
+.row{display:grid;grid-template-columns:2rem 1fr 1fr auto;gap:0 14px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
+.row.hd{border-top:0;padding:0 0 6px;color:var(--mute);font-size:13px}
+.no{font:600 1.2rem/1.4 "Songti SC","Noto Serif SC",serif;color:var(--mute)}
+.col+.col{border-left:1px solid var(--line);padding-left:14px}
+.it{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.it input{margin-top:5px;width:16px;height:16px}
+.it.lec input{accent-color:var(--lec)}
+.it.hw input{accent-color:var(--hw)}
+.it.done .tx{color:var(--mute);text-decoration:line-through}
+.col a{color:var(--lec);text-decoration:none;font-size:13px;margin-left:24px}
+.tools{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.tools button{font-size:12px;padding:1px 8px;color:var(--mute)}
+.tools .arm{color:var(--warn);border-color:var(--warn)}
+.ed{display:grid;gap:6px}
+.note{grid-column:2/-1;margin-top:10px;min-height:88px;resize:vertical}
+.empty{padding:26px 0;color:var(--mute);border-top:1px solid var(--line)}
+.addu{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;border-top:1px solid var(--line);padding-top:16px}
+.foot{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+details{width:100%;color:var(--mute)}
+details textarea{margin:8px 0;min-height:120px;font:12px/1.4 ui-monospace,Menlo,monospace}
+.msg{color:var(--warn);margin-left:8px}
+@media (max-width:640px){
+ .row{grid-template-columns:1.6rem 1fr}
+ .row.hd{display:none}
+ .col+.col{border-left:0;padding-left:0;margin-top:6px}
+ .tools{grid-column:2;justify-content:flex-start;margin-top:8px}
+ .note{grid-column:2}
+ .addu{grid-template-columns:1fr}
+ .addc{min-width:100%;margin-left:0}
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var K='study-system-v1';
+function mk(l,h,n){return{lec:l,lecUrl:'',hw:h,hwUrl:'',ld:0,hd:0,note:n||''}}
+var SEED=[
+mk('函数与控制流','lab00、lab01、hw01'),
+mk('高阶函数、Lambda、环境图','lab02、hw02'),
+mk('递归、Python 列表','lab03；Project Hog'),
+mk('树递归、数据抽象','lab04、hw03'),
+mk('序列与树','hw04'),
+mk('迭代器、可变性','lab05；Project Cats'),
+mk('生成器','hw05'),
+mk('面向对象','lab06'),
+mk('链表、继承','lab07、hw06'),
+mk('可变树','lab08；Project Ants'),
+mk('Scheme、Scheme 列表','lab09、hw07、hw08'),
+mk('解释器、程序即数据与宏','lab10、lab11、hw09；Project Scheme'),
+mk('SQL','lab12、hw10、hw11')];
+var S=null;
+try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S||!Array.isArray(S.courses)||!S.courses.length){S={active:0,courses:[{name:'CS61A',units:SEED}]}}
+var openNote={},editing=-1,armed='',msg='';
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function url(s){s=String(s||'').trim();return /^https?:\/\//i.test(s)?s:''}
+function cur(){return S.courses[Math.min(S.active,S.courses.length-1)]}
+function item(u,i,k){
+ var lec=k==='lec',d=lec?u.ld:u.hd,t=lec?u.lec:u.hw,l=url(lec?u.lecUrl:u.hwUrl);
+ return '<div class="col"><label class="it '+(lec?'lec':'hw')+(d?' done':'')+'"><input type="checkbox" data-a="tg" data-i="'+i+'" data-k="'+(lec?'ld':'hd')+'"'+(d?' checked':'')+'><span class="tx">'+esc(t||'（未填写）')+'</span></label>'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">打开链接</a>':'')+'</div>';
+}
+function edit(u,i){
+ return '<div class="col ed"><input name="lec" value="'+esc(u.lec)+'" placeholder="Lecture 标题"><input name="lu" value="'+esc(u.lecUrl)+'" placeholder="Lecture 链接（可选）"></div>'+
+ '<div class="col ed"><input name="hw" value="'+esc(u.hw)+'" placeholder="作业标题"><input name="hu" value="'+esc(u.hwUrl)+'" placeholder="作业链接（可选）"></div>';
+}
+function R(){
+ var c=cur(),U=c.units,n=U.length,done=0,h='';
+ U.forEach(function(u){done+=(u.ld?1:0)+(u.hd?1:0)});
+ var pct=n?Math.round(done/(2*n)*100):0;
+ h+='<nav class="tabs">'+S.courses.map(function(x,i){return '<button class="tab'+(x===c?' on':'')+'" data-a="tab" data-i="'+i+'">'+esc(x.name)+'</button>'}).join('')+
+ '<form class="addc" data-f="course"><input name="n" placeholder="新课程名称" maxlength="30"><button>添加课程</button></form></nav>';
+ h+='<h1 contenteditable="true" spellcheck="false" data-a="title" aria-label="课程名称，点击可修改">'+esc(c.name)+'</h1>';
+ h+='<p class="sum">已完成 '+done+' / '+(2*n)+' 项，共 '+pct+'%</p>';
+ if(n){
+  h+='<div class="strip">'+U.map(function(u,i){return '<button class="cell" data-a="go" data-i="'+i+'" title="单元 '+(i+1)+'：'+esc(u.lec)+'" aria-label="跳到单元 '+(i+1)+'"><i class="'+(u.ld?'f':'')+'"></i><i class="'+(u.hd?'f':'')+'"></i></button>'}).join('')+'</div>';
+ }
+ h+='<p class="legend">每一格是一个单元：上半是 Lecture<span class="dot" style="background:var(--lec)"></span>下半是作业<span class="dot" style="background:var(--hw)"></span>填色表示已完成</p>';
+ if(n){
+  h+='<div class="row hd"><span></span><span><span class="dot" style="background:var(--lec);margin-left:0"></span>Lecture</span><span style="padding-left:14px"><span class="dot" style="background:var(--hw);margin-left:0"></span>作业</span><span></span></div>';
+  U.forEach(function(u,i){
+   var E=editing===i;
+   h+='<section class="row" id="u'+i+'"><span class="no">'+(i+1)+'</span>'+(E?edit(u,i):item(u,i,'lec')+item(u,i,'hw'))+
+   '<span class="tools">'+(E?'<button data-a="sv" data-i="'+i+'">保存</button><button data-a="cx">取消</button>':
+   '<button data-a="note" data-i="'+i+'">'+(u.note?'笔记 •':'笔记')+'</button><button data-a="ed" data-i="'+i+'">编辑</button><button data-a="del" data-i="'+i+'"'+(armed==='u'+i?' class="arm"':'')+'>'+(armed==='u'+i?'再点一次删除':'删除')+'</button>')+'</span>'+
+   (openNote[i]?'<textarea class="note" data-a="nt" data-i="'+i+'" placeholder="记下这个单元的笔记、卡住的地方和待复习的问题">'+esc(u.note)+'</textarea>':'')+'</section>';
+  });
+ }else{
+  h+='<div class="empty">这门课还没有单元。在下面填写第一个 Lecture 和对应的作业。</div>';
+ }
+ h+='<form class="addu" data-f="unit"><input name="lec" placeholder="Lecture 标题"><input name="hw" placeholder="对应作业"><button>添加单元</button></form>';
+ h+='<div class="foot">'+(S.courses.length>1?'<button data-a="delc"'+(armed==='c'?' class="arm"':'')+'>'+(armed==='c'?'再点一次删除这门课':'删除这门课')+'</button>':'')+
+ '<details><summary>备份与恢复</summary><textarea id="bk" aria-label="备份数据">'+esc(JSON.stringify(S))+'</textarea><button data-a="imp">用上面的内容覆盖当前数据</button><span class="msg">'+esc(msg)+'</span></details></div>';
+ document.getElementById('app').innerHTML=h;
+ msg='';
+}
+document.addEventListener('click',function(e){
+ var b=e.target.closest('[data-a]');if(!b)return;
+ var a=b.dataset.a,i=+b.dataset.i,c=cur();
+ if(a==='tab'){S.active=i;editing=-1;openNote={};armed=''}
+ else if(a==='go'){var el=document.getElementById('u'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});return}
+ else if(a==='note'){openNote[i]=!openNote[i]}
+ else if(a==='ed'){editing=i}
+ else if(a==='cx'){editing=-1}
+ else if(a==='sv'){var r=b.closest('.row'),u=c.units[i],q=function(n){return r.querySelector('[name='+n+']').value.trim()};
+  u.lec=q('lec');u.lecUrl=url(q('lu'));u.hw=q('hw');u.hwUrl=url(q('hu'));editing=-1;save()}
+ else if(a==='del'){if(armed==='u'+i){c.units.splice(i,1);openNote={};armed='';save()}else{armed='u'+i}}
+ else if(a==='delc'){if(armed==='c'){S.courses.splice(S.active,1);S.active=0;armed='';save()}else{armed='c'}}
+ else if(a==='imp'){try{var d=JSON.parse(document.getElementById('bk').value);
+  if(!d||!Array.isArray(d.courses)||!d.courses.length)throw 0;
+  d.courses.forEach(function(x){if(typeof x.name!=='string'||!Array.isArray(x.units))throw 0;x.units=x.units.map(function(u){return{lec:String(u.lec||''),lecUrl:url(u.lecUrl),hw:String(u.hw||''),hwUrl:url(u.hwUrl),ld:u.ld?1:0,hd:u.hd?1:0,note:String(u.note||'')}})});
+  d.active=0;S=d;editing=-1;openNote={};save()}catch(x){msg='数据格式不对，没有导入。';R();return}}
+ else return;
+ R();
+});
+document.addEventListener('change',function(e){
+ var t=e.target;if(t.dataset.a!=='tg')return;
+ cur().units[+t.dataset.i][t.dataset.k]=t.checked?1:0;save();R();
+});
+document.addEventListener('input',function(e){
+ var t=e.target;if(t.dataset.a==='nt'){cur().units[+t.dataset.i].note=t.value;save()}
+});
+document.addEventListener('focusout',function(e){
+ var t=e.target;if(t.dataset&&t.dataset.a==='title'){var v=t.textContent.trim();if(v){cur().name=v.slice(0,30);save()}R()}
+});
+document.addEventListener('keydown',function(e){
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.a==='title'){e.preventDefault();e.target.blur()}
+});
+document.addEventListener('submit',function(e){
+ e.preventDefault();var f=e.target,k=f.dataset.f;
+ if(k==='course'){var n=f.n.value.trim();if(!n)return;S.courses.push({name:n.slice(0,30),units:[]});S.active=S.courses.length-1;editing=-1;openNote={}}
+ else if(k==='unit'){var l=f.lec.value.trim(),w=f.hw.value.trim();if(!l&&!w)return;cur().units.push({lec:l,lecUrl:'',hw:w,hwUrl:'',ld:0,hd:0,note:''})}
+ else return;
+ save();R();
+});
+R();
+</script>
+</body>
+</html>
