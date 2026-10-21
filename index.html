@@ -15,13 +15,15 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-app
 main{max-width:880px;margin:0 auto;padding:16px 16px 56px}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:1px solid var(--line);border-radius:6px;padding:3px 10px}
-button:hover{border-color:var(--mute)}
+button{transition:border-color .15s,background .15s}
+button:hover{border-color:var(--mute);background:var(--surface)}
 :focus-visible{outline:2px solid var(--lec);outline-offset:2px}
 input[type=text],input:not([type]),textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px;width:100%}
 .bar{display:flex;gap:8px;align-items:center;margin:4px 0 10px}
 .tabs{flex:1;min-width:0;position:relative;display:flex;gap:6px;overflow-x:auto;padding:2px 22px 2px 2px;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{white-space:nowrap;border-radius:999px;padding:4px 14px}
+.tab{white-space:nowrap;border-radius:999px;padding:4px 14px;position:relative;overflow:hidden}
+.tab i{position:absolute;left:0;bottom:0;height:3px;background:var(--hw);opacity:.85}
 .tab.on,.plus.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .plus{flex:none;width:32px;height:32px;padding:0;border-radius:50%;font-size:20px;line-height:1}
 .addc{display:flex;gap:6px;margin:0 0 12px}
@@ -30,13 +32,13 @@ input[type=text],input:not([type]),textarea{background:var(--surface);border:1px
 .mv{display:flex;gap:4px}
 .mv button{font-size:13px;padding:3px 12px;background:var(--surface)}
 .mv button:disabled{opacity:.4;cursor:default}
-.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:0 0 14px}
+.prog{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:0 0 14px}
 .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--lec),var(--hw))}
 h1{font:600 2rem/1.25 "Songti SC","Noto Serif SC","Source Han Serif SC",serif;margin:22px 0 2px;outline:none}
 .sum{margin:0 0 8px;color:var(--mute)}
-.strip{display:flex;flex-wrap:wrap;gap:4px}
-.cell{display:flex;flex-direction:column;gap:2px;padding:0;border:0;width:22px}
-.cell i{display:block;height:13px;border-radius:2px;background:var(--line)}
+.strip{display:flex;flex-wrap:wrap;gap:5px}
+.cell{display:flex;flex-direction:column;gap:2px;padding:0;border:0;width:26px}
+.cell i{display:block;height:14px;border-radius:3px;background:var(--line)}
 .cell i:first-child.f{background:var(--lec)}
 .cell i:last-child.f{background:var(--hw)}
 .legend{margin:8px 0 26px;font-size:13px;color:var(--mute)}
@@ -44,11 +46,14 @@ h1{font:600 2rem/1.25 "Songti SC","Noto Serif SC","Source Han Serif SC",serif;ma
 .row{display:grid;grid-template-columns:2rem 1fr 1fr auto;gap:0 14px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
 .row.hd{border-top:0;padding:0 0 6px;color:var(--mute);font-size:13px}
 .no{font:600 1.2rem/1.4 "Songti SC","Noto Serif SC",serif;color:var(--mute)}
+.row.ok .no{color:var(--hw)}
 .col+.col{border-left:1px solid var(--line);padding-left:14px}
 .it{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
-.it input{margin-top:5px;width:16px;height:16px}
-.it.lec input{accent-color:var(--lec)}
-.it.hw input{accent-color:var(--hw)}
+.it input{appearance:none;-webkit-appearance:none;flex:none;display:grid;place-content:center;width:18px;height:18px;margin:4px 0 0;border:1.5px solid var(--mute);border-radius:5px;background:var(--surface);cursor:pointer}
+.it input::after{content:"";width:9px;height:5px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+.it input:checked::after{opacity:1}
+.it.lec input:checked{background:var(--lec);border-color:var(--lec)}
+.it.hw input:checked{background:var(--hw);border-color:var(--hw)}
 .it.done .tx{color:var(--mute);text-decoration:line-through}
 .col a{color:var(--lec);text-decoration:none;font-size:13px;margin-left:24px}
 .tools{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
@@ -99,6 +104,7 @@ function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function url(s){s=String(s||'').trim();return /^https?:\/\//i.test(s)?s:''}
 function cur(){return S.courses[Math.min(S.active,S.courses.length-1)]}
+function pc(x){var t=0,d=0;x.units.forEach(function(u){t+=2;d+=(u.ld?1:0)+(u.hd?1:0)});return t?Math.round(d/t*100):0}
 function item(u,i,k){
  var lec=k==='lec',d=lec?u.ld:u.hd,t=lec?u.lec:u.hw,l=url(lec?u.lecUrl:u.hwUrl);
  return '<div class="col"><label class="it '+(lec?'lec':'hw')+(d?' done':'')+'"><input type="checkbox" data-a="tg" data-i="'+i+'" data-k="'+(lec?'ld':'hd')+'"'+(d?' checked':'')+'><span class="tx">'+esc(t||'（未填写）')+'</span></label>'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">打开链接</a>':'')+'</div>';
@@ -112,7 +118,7 @@ function R(){
  U.forEach(function(u){done+=(u.ld?1:0)+(u.hd?1:0)});
  var pct=n?Math.round(done/(2*n)*100):0;
  var ci=S.courses.indexOf(c),L=S.courses.length;
- h+='<div class="bar"><nav class="tabs" id="tabs">'+S.courses.map(function(x,i){return '<button class="tab'+(x===c?' on':'')+'" data-a="tab" data-i="'+i+'">'+esc(x.name)+'</button>'}).join('')+'</nav>'+
+ h+='<div class="bar"><nav class="tabs" id="tabs">'+S.courses.map(function(x,i){return '<button class="tab'+(x===c?' on':'')+'" data-a="tab" data-i="'+i+'">'+esc(x.name)+'<i style="width:'+pc(x)+'%"></i></button>'}).join('')+'</nav>'+
  '<button class="plus'+(addingC?' on':'')+'" data-a="addc" aria-label="'+(addingC?'收起添加课程':'添加课程')+'" aria-expanded="'+addingC+'">'+(addingC?'×':'+')+'</button></div>';
  if(addingC)h+='<form class="addc" data-f="course"><input name="n" placeholder="新课程名称" maxlength="30"><button>添加</button></form>';
  h+='<div class="head"><h1 contenteditable="true" spellcheck="false" data-a="title" aria-label="课程名称，点击可修改">'+esc(c.name)+'</h1>'+
@@ -126,7 +132,7 @@ function R(){
   h+='<div class="row hd"><span></span><span><span class="dot" style="background:var(--lec);margin-left:0"></span>Lecture</span><span style="padding-left:14px"><span class="dot" style="background:var(--hw);margin-left:0"></span>作业</span><span></span></div>';
   U.forEach(function(u,i){
    var E=editing===i;
-   h+='<section class="row" id="u'+i+'"><span class="no">'+(i+1)+'</span>'+(E?edit(u,i):item(u,i,'lec')+item(u,i,'hw'))+
+   h+='<section class="row'+(u.ld&&u.hd?' ok':'')+'" id="u'+i+'"><span class="no">'+(i+1)+'</span>'+(E?edit(u,i):item(u,i,'lec')+item(u,i,'hw'))+
    '<span class="tools">'+(E?'<button data-a="sv" data-i="'+i+'">保存</button><button data-a="cx">取消</button>':
    '<button data-a="note" data-i="'+i+'">'+(u.note?'笔记 •':'笔记')+'</button><button data-a="ed" data-i="'+i+'">编辑</button><button data-a="del" data-i="'+i+'"'+(armed==='u'+i?' class="arm"':'')+'>'+(armed==='u'+i?'再点一次删除':'删除')+'</button>')+'</span>'+
    (openNote[i]?'<textarea class="note" data-a="nt" data-i="'+i+'" placeholder="记下这个单元的笔记、卡住的地方和待复习的问题">'+esc(u.note)+'</textarea>':'')+'</section>';
