@@ -1,173 +1,1357 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>课程学习进度</title>
-<style>
-:root{--bg:#f3f5f8;--surface:#fff;--ink:#1c2430;--mute:#69747f;--line:#d8dee5;--lec:#2455c3;--hw:#1f8a6a;--warn:#b3402a;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--surface:#171e27;--ink:#e6ebf1;--mute:#93a0ad;--line:#2a3441;--lec:#6f97f0;--hw:#4cc29d;--warn:#f0907a;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#10151c;--surface:#171e27;--ink:#e6ebf1;--mute:#93a0ad;--line:#2a3441;--lec:#6f97f0;--hw:#4cc29d;--warn:#f0907a;color-scheme:dark}
-html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 12px)}
-*,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-main{max-width:880px;margin:0 auto;padding:16px 16px 56px}
-button,input,textarea{font:inherit;color:inherit}
-button{cursor:pointer;background:none;border:1px solid var(--line);border-radius:6px;padding:3px 10px}
-button:hover{border-color:var(--mute)}
-:focus-visible{outline:2px solid var(--lec);outline-offset:2px}
-input[type=text],input:not([type]),textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px;width:100%}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;align-items:center}
-.tab{white-space:nowrap}
-.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.addc{display:flex;gap:6px;margin-left:auto;min-width:220px}
-h1{font:600 2rem/1.25 "Songti SC","Noto Serif SC","Source Han Serif SC",serif;margin:22px 0 2px;outline:none}
-.sum{margin:0 0 14px;color:var(--mute)}
-.strip{display:flex;flex-wrap:wrap;gap:4px}
-.cell{display:flex;flex-direction:column;gap:2px;padding:0;border:0;width:22px}
-.cell i{display:block;height:13px;border-radius:2px;background:var(--line)}
-.cell i:first-child.f{background:var(--lec)}
-.cell i:last-child.f{background:var(--hw)}
-.legend{margin:8px 0 26px;font-size:13px;color:var(--mute)}
-.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px}
-.row{display:grid;grid-template-columns:2rem 1fr 1fr auto;gap:0 14px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
-.row.hd{border-top:0;padding:0 0 6px;color:var(--mute);font-size:13px}
-.no{font:600 1.2rem/1.4 "Songti SC","Noto Serif SC",serif;color:var(--mute)}
-.col+.col{border-left:1px solid var(--line);padding-left:14px}
-.it{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
-.it input{margin-top:5px;width:16px;height:16px}
-.it.lec input{accent-color:var(--lec)}
-.it.hw input{accent-color:var(--hw)}
-.it.done .tx{color:var(--mute);text-decoration:line-through}
-.col a{color:var(--lec);text-decoration:none;font-size:13px;margin-left:24px}
-.tools{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
-.tools button{font-size:12px;padding:1px 8px;color:var(--mute)}
-.tools .arm{color:var(--warn);border-color:var(--warn)}
-.ed{display:grid;gap:6px}
-.note{grid-column:2/-1;margin-top:10px;min-height:88px;resize:vertical}
-.empty{padding:26px 0;color:var(--mute);border-top:1px solid var(--line)}
-.addu{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;border-top:1px solid var(--line);padding-top:16px}
-.foot{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
-details{width:100%;color:var(--mute)}
-details textarea{margin:8px 0;min-height:120px;font:12px/1.4 ui-monospace,Menlo,monospace}
-.msg{color:var(--warn);margin-left:8px}
-@media (max-width:640px){
- .row{grid-template-columns:1.6rem 1fr}
- .row.hd{display:none}
- .col+.col{border-left:0;padding-left:0;margin-top:6px}
- .tools{grid-column:2;justify-content:flex-start;margin-top:8px}
- .note{grid-column:2}
- .addu{grid-template-columns:1fr}
- .addc{min-width:100%;margin-left:0}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>课程学习进度</title>
+  <script>
+    // 在绘制页面前读取主题，减少深浅色切换时的闪烁。
+    (() => {
+      try {
+        const theme = localStorage.getItem('study-system-theme-v1');
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch { /* 本地存储不可用时，使用系统主题。 */ }
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f3f5f9;
+      --surface: #ffffff;
+      --surface-soft: #f7f9fc;
+      --ink: #17283e;
+      --mute: #58697e;
+      --line: #dce3ed;
+      --lec: #285ac7;
+      --lec-soft: #edf2ff;
+      --hw: #137357;
+      --hw-soft: #e9f6ef;
+      --warn: #b33729;
+      --warn-soft: #fff1ed;
+      --shadow: 0 8px 28px rgb(24 42 68 / 5%);
+      --radius: 18px;
+      --radius-sm: 10px;
+      --s1: 4px;
+      --s2: 8px;
+      --s3: 12px;
+      --s4: 16px;
+      --s5: 24px;
+      --s6: 32px;
+      --s7: 48px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #101721;
+        --surface: #182230;
+        --surface-soft: #1d2a3b;
+        --ink: #edf2fa;
+        --mute: #b0bfd2;
+        --line: #344359;
+        --lec: #9ab9ff;
+        --lec-soft: #223452;
+        --hw: #7adbb6;
+        --hw-soft: #1c3b35;
+        --warn: #ffab9c;
+        --warn-soft: #432b2c;
+        --shadow: 0 8px 28px rgb(0 0 0 / 12%);
+      }
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #101721;
+      --surface: #182230;
+      --surface-soft: #1d2a3b;
+      --ink: #edf2fa;
+      --mute: #b0bfd2;
+      --line: #344359;
+      --lec: #9ab9ff;
+      --lec-soft: #223452;
+      --hw: #7adbb6;
+      --hw-soft: #1c3b35;
+      --warn: #ffab9c;
+      --warn-soft: #432b2c;
+      --shadow: 0 8px 28px rgb(0 0 0 / 12%);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: var(--s5); }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.7 system-ui, -apple-system, BlinkMacSystemFont,
+        "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      line-height: 1.3;
+      letter-spacing: -.035em;
+    }
+    h2 { font-size: 1.15rem; line-height: 1.5; }
+    a { color: var(--lec); text-underline-offset: 4px; }
+    a:hover { text-decoration-thickness: 2px; }
+    button, input, textarea, select { font: inherit; color: inherit; }
+    button, select, summary { cursor: pointer; }
+    button, .button, select {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: var(--s2) var(--s4);
+      background: var(--surface);
+      text-decoration: none;
+      transition: background .16s, border-color .16s, color .16s;
+    }
+    button:hover, .button:hover, select:hover {
+      border-color: var(--lec);
+      background: var(--lec-soft);
+      color: var(--lec);
+    }
+    button:active, .button:active { transform: translateY(1px); }
+    :focus-visible { outline: 3px solid var(--lec); outline-offset: 3px; }
+    .primary {
+      background: var(--lec);
+      border-color: var(--lec);
+      color: var(--surface);
+      font-weight: 600;
+    }
+    .primary:hover {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--surface);
+    }
+    .arm {
+      color: var(--warn);
+      border-color: var(--warn);
+      background: var(--warn-soft);
+    }
+    input[type="text"], input[type="url"], textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      padding: 10px var(--s3);
+      font-size: 16px;
+    }
+    input::placeholder, textarea::placeholder {
+      color: var(--mute);
+      opacity: 1;
+    }
+    textarea { resize: vertical; }
+    .shell {
+      width: min(1160px, 100%);
+      margin-inline: auto;
+      padding-left: max(var(--s5), env(safe-area-inset-left));
+      padding-right: max(var(--s5), env(safe-area-inset-right));
+    }
+    .site-header {
+      padding-top: max(var(--s5), env(safe-area-inset-top));
+      padding-bottom: var(--s5);
+    }
+    .header-inner, .theme-control, .section-heading, .course-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--s4);
+      flex-wrap: wrap;
+    }
+    .header-inner, .section-heading { justify-content: space-between; }
+    .brand {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+    .brand::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 22px;
+      margin-right: var(--s3);
+      border-radius: 4px;
+      background: var(--lec);
+      vertical-align: -4px;
+    }
+    .theme-control {
+      gap: var(--s2);
+      color: var(--mute);
+      font-size: .875rem;
+    }
+    .theme-control select { padding: var(--s2); }
+    main { padding-bottom: max(var(--s7), env(safe-area-inset-bottom)); }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .overview {
+      padding: var(--s6);
+      margin-bottom: var(--s5);
+    }
+    .course-bar {
+      padding-bottom: var(--s5);
+      border-bottom: 1px solid var(--line);
+    }
+    .tabs {
+      display: flex;
+      gap: var(--s2);
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: auto;
+      padding: var(--s1);
+    }
+    .tab { white-space: nowrap; }
+    .tab.on {
+      background: var(--lec-soft);
+      border-color: var(--lec);
+      color: var(--lec);
+      font-weight: 700;
+    }
+    .addc {
+      display: flex;
+      gap: var(--s2);
+      margin-left: auto;
+      width: min(100%, 330px);
+    }
+    .addc button { flex: 0 0 auto; }
+    .course-title {
+      width: fit-content;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      border-radius: var(--radius-sm);
+      margin-top: var(--s5);
+    }
+    .course-title:hover { background: var(--surface-soft); }
+    .sum {
+      color: var(--mute);
+      margin-top: var(--s2);
+      font-variant-numeric: tabular-nums;
+    }
+    .progress {
+      display: block;
+      width: 100%;
+      height: 8px;
+      margin: var(--s5) 0;
+      border: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--line);
+      accent-color: var(--lec);
+    }
+    .progress::-webkit-progress-bar { background: var(--line); }
+    .progress::-webkit-progress-value {
+      background: var(--lec);
+      border-radius: 8px;
+    }
+    .progress::-moz-progress-bar {
+      background: var(--lec);
+      border-radius: 8px;
+    }
+    .strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s2);
+    }
+    .cell {
+      display: grid;
+      gap: var(--s1);
+      width: 44px;
+      padding: 6px;
+      background: var(--surface-soft);
+    }
+    .cell i {
+      display: block;
+      height: 9px;
+      border-radius: 3px;
+      background: var(--line);
+    }
+    .cell .lecture.f { background: var(--lec); }
+    .cell .homework.f { background: var(--hw); }
+    .cell-number {
+      font-size: 11px;
+      line-height: 1.2;
+      color: var(--mute);
+    }
+    .legend {
+      margin-top: var(--s3);
+      font-size: .8rem;
+      color: var(--mute);
+    }
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 3px;
+      margin-inline: 6px;
+    }
+    .dot.lec { background: var(--lec); }
+    .dot.hw { background: var(--hw); }
+    .workspace {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: var(--s5);
+      align-items: start;
+    }
+    .directory {
+      position: sticky;
+      top: var(--s5);
+      padding: var(--s4);
+    }
+    summary {
+      padding: var(--s2) 0;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    summary:hover { color: var(--lec); }
+    .directory nav {
+      max-height: 65vh;
+      overflow: auto;
+      margin-top: var(--s2);
+    }
+    .directory ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: var(--s1);
+    }
+    .directory a {
+      display: flex;
+      gap: var(--s2);
+      padding: var(--s2);
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      color: var(--mute);
+      overflow-wrap: anywhere;
+    }
+    .directory a:hover {
+      background: var(--lec-soft);
+      color: var(--lec);
+    }
+    .directory .index {
+      flex: 0 0 1.5em;
+      font-variant-numeric: tabular-nums;
+      color: var(--lec);
+    }
+    .directory .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s2);
+      border-top: 1px solid var(--line);
+      margin-top: var(--s3);
+      padding-top: var(--s3);
+      font-size: .8rem;
+    }
+    .content { min-width: 0; }
+    .units-panel, .add-panel, .backup-panel { padding: var(--s5); }
+    .add-panel, .backup-panel { margin-top: var(--s5); }
+    .section-heading { margin-bottom: var(--s5); }
+    .section-heading a { font-size: .85rem; }
+    .row {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) 72px;
+      gap: var(--s4);
+      padding-block: var(--s5);
+      border-top: 1px solid var(--line);
+      align-items: start;
+      scroll-margin-top: var(--s5);
+    }
+    .row:target {
+      background: var(--lec-soft);
+      border-radius: var(--radius-sm);
+    }
+    .row.hd {
+      padding: 0 0 var(--s3);
+      border: 0;
+      color: var(--mute);
+      font-size: .8rem;
+    }
+    .no {
+      font-size: 1rem;
+      color: var(--mute);
+      font-variant-numeric: tabular-nums;
+    }
+    .col { min-width: 0; }
+    .col + .col {
+      border-left: 1px solid var(--line);
+      padding-left: var(--s4);
+    }
+    .it {
+      display: flex;
+      gap: var(--s2);
+      min-height: 44px;
+      align-items: flex-start;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .it:hover .tx { color: var(--lec); }
+    .it input {
+      flex-shrink: 0;
+      margin: 4px 0 0;
+      width: 19px;
+      height: 19px;
+      accent-color: var(--lec);
+    }
+    .it.hw input { accent-color: var(--hw); }
+    .tx { overflow-wrap: anywhere; }
+    .it.done .tx {
+      color: var(--mute);
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+    .col a {
+      display: inline-block;
+      margin-left: 27px;
+      padding-block: var(--s2);
+      font-size: .8rem;
+    }
+    .mobile-label {
+      display: none;
+      font-size: .75rem;
+      color: var(--mute);
+      margin-bottom: var(--s1);
+    }
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s2);
+    }
+    .tools button {
+      width: 100%;
+      padding: 6px;
+      font-size: .8rem;
+    }
+    .ed {
+      display: grid;
+      gap: var(--s2);
+    }
+    .note {
+      grid-column: 2 / -1;
+      min-height: 120px;
+    }
+    .empty {
+      padding: var(--s5) 0;
+      color: var(--mute);
+      border-top: 1px solid var(--line);
+    }
+    .addu {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: var(--s3);
+      margin-top: var(--s4);
+    }
+    .foot {
+      display: grid;
+      gap: var(--s4);
+    }
+    .foot > button { justify-self: start; }
+    .backup-panel summary { font-size: 1.1rem; }
+    .backup-panel textarea {
+      display: block;
+      margin: var(--s4) 0;
+      min-height: 150px;
+      font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .msg {
+      color: var(--warn);
+      margin-top: var(--s3);
+      overflow-wrap: anywhere;
+    }
+    .msg:empty { display: none; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+    .skip-link {
+      position: fixed;
+      top: -100px;
+      left: var(--s4);
+      z-index: 10;
+    }
+    .skip-link:focus { top: var(--s4); }
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: minmax(0, 1fr); }
+      .directory { position: static; }
+      .directory nav { max-height: 280px; }
+      .directory ol {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .shell {
+        padding-left: max(var(--s4), env(safe-area-inset-left));
+        padding-right: max(var(--s4), env(safe-area-inset-right));
+      }
+      .site-header { padding-bottom: var(--s4); }
+      .overview, .units-panel, .add-panel, .backup-panel {
+        padding: var(--s4);
+      }
+      .addc {
+        width: 100%;
+        margin-left: 0;
+      }
+      .tabs { width: 100%; }
+      .workspace { gap: var(--s4); }
+      .row {
+        grid-template-columns: 26px minmax(0, 1fr);
+        gap: var(--s3);
+      }
+      .row.hd { display: none; }
+      .row .col, .row .tools, .row .note { grid-column: 2; }
+      .col + .col {
+        border-left: 0;
+        padding-left: 0;
+      }
+      .tools button {
+        width: auto;
+        min-width: 60px;
+        padding-inline: var(--s3);
+      }
+      .mobile-label { display: block; }
+      .addu { grid-template-columns: minmax(0, 1fr); }
+      .directory ol { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+    }
+    @media print {
+      :root {
+        --bg: #fff;
+        --surface: #fff;
+        --ink: #111;
+        --mute: #444;
+        --line: #bbb;
+      }
+      .site-header, .course-bar, .directory, .tools, .add-panel,
+      .backup-panel, .strip, .skip-link, .section-heading a {
+        display: none;
+      }
+      .shell {
+        width: 100%;
+        padding: 0;
+      }
+      .workspace { display: block; }
+      .card {
+        box-shadow: none;
+        border: 0;
+      }
+      .row {
+        break-inside: avoid;
+        grid-template-columns: 30px 1fr 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-<main id="app"></main>
-<script>
-var K='study-system-v1';
-function mk(l,h,n){return{lec:l,lecUrl:'',hw:h,hwUrl:'',ld:0,hd:0,note:n||''}}
-var SEED=[
-mk('函数与控制流','lab00、lab01、hw01'),
-mk('高阶函数、Lambda、环境图','lab02、hw02'),
-mk('递归、Python 列表','lab03；Project Hog'),
-mk('树递归、数据抽象','lab04、hw03'),
-mk('序列与树','hw04'),
-mk('迭代器、可变性','lab05；Project Cats'),
-mk('生成器','hw05'),
-mk('面向对象','lab06'),
-mk('链表、继承','lab07、hw06'),
-mk('可变树','lab08；Project Ants'),
-mk('Scheme、Scheme 列表','lab09、hw07、hw08'),
-mk('解释器、程序即数据与宏','lab10、lab11、hw09；Project Scheme'),
-mk('SQL','lab12、hw10、hw11')];
-var S=null;
-try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
-if(!S||!Array.isArray(S.courses)||!S.courses.length){S={active:0,courses:[{name:'CS61A',units:SEED}]}}
-var openNote={},editing=-1,armed='',msg='';
-function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function url(s){s=String(s||'').trim();return /^https?:\/\//i.test(s)?s:''}
-function cur(){return S.courses[Math.min(S.active,S.courses.length-1)]}
-function item(u,i,k){
- var lec=k==='lec',d=lec?u.ld:u.hd,t=lec?u.lec:u.hw,l=url(lec?u.lecUrl:u.hwUrl);
- return '<div class="col"><label class="it '+(lec?'lec':'hw')+(d?' done':'')+'"><input type="checkbox" data-a="tg" data-i="'+i+'" data-k="'+(lec?'ld':'hd')+'"'+(d?' checked':'')+'><span class="tx">'+esc(t||'（未填写）')+'</span></label>'+(l?'<a href="'+esc(l)+'" target="_blank" rel="noopener">打开链接</a>':'')+'</div>';
-}
-function edit(u,i){
- return '<div class="col ed"><input name="lec" value="'+esc(u.lec)+'" placeholder="Lecture 标题"><input name="lu" value="'+esc(u.lecUrl)+'" placeholder="Lecture 链接（可选）"></div>'+
- '<div class="col ed"><input name="hw" value="'+esc(u.hw)+'" placeholder="作业标题"><input name="hu" value="'+esc(u.hwUrl)+'" placeholder="作业链接（可选）"></div>';
-}
-function R(){
- var c=cur(),U=c.units,n=U.length,done=0,h='';
- U.forEach(function(u){done+=(u.ld?1:0)+(u.hd?1:0)});
- var pct=n?Math.round(done/(2*n)*100):0;
- h+='<nav class="tabs">'+S.courses.map(function(x,i){return '<button class="tab'+(x===c?' on':'')+'" data-a="tab" data-i="'+i+'">'+esc(x.name)+'</button>'}).join('')+
- '<form class="addc" data-f="course"><input name="n" placeholder="新课程名称" maxlength="30"><button>添加课程</button></form></nav>';
- h+='<h1 contenteditable="true" spellcheck="false" data-a="title" aria-label="课程名称，点击可修改">'+esc(c.name)+'</h1>';
- h+='<p class="sum">已完成 '+done+' / '+(2*n)+' 项，共 '+pct+'%</p>';
- if(n){
-  h+='<div class="strip">'+U.map(function(u,i){return '<button class="cell" data-a="go" data-i="'+i+'" title="单元 '+(i+1)+'：'+esc(u.lec)+'" aria-label="跳到单元 '+(i+1)+'"><i class="'+(u.ld?'f':'')+'"></i><i class="'+(u.hd?'f':'')+'"></i></button>'}).join('')+'</div>';
- }
- h+='<p class="legend">每一格是一个单元：上半是 Lecture<span class="dot" style="background:var(--lec)"></span>下半是作业<span class="dot" style="background:var(--hw)"></span>填色表示已完成</p>';
- if(n){
-  h+='<div class="row hd"><span></span><span><span class="dot" style="background:var(--lec);margin-left:0"></span>Lecture</span><span style="padding-left:14px"><span class="dot" style="background:var(--hw);margin-left:0"></span>作业</span><span></span></div>';
-  U.forEach(function(u,i){
-   var E=editing===i;
-   h+='<section class="row" id="u'+i+'"><span class="no">'+(i+1)+'</span>'+(E?edit(u,i):item(u,i,'lec')+item(u,i,'hw'))+
-   '<span class="tools">'+(E?'<button data-a="sv" data-i="'+i+'">保存</button><button data-a="cx">取消</button>':
-   '<button data-a="note" data-i="'+i+'">'+(u.note?'笔记 •':'笔记')+'</button><button data-a="ed" data-i="'+i+'">编辑</button><button data-a="del" data-i="'+i+'"'+(armed==='u'+i?' class="arm"':'')+'>'+(armed==='u'+i?'再点一次删除':'删除')+'</button>')+'</span>'+
-   (openNote[i]?'<textarea class="note" data-a="nt" data-i="'+i+'" placeholder="记下这个单元的笔记、卡住的地方和待复习的问题">'+esc(u.note)+'</textarea>':'')+'</section>';
-  });
- }else{
-  h+='<div class="empty">这门课还没有单元。在下面填写第一个 Lecture 和对应的作业。</div>';
- }
- h+='<form class="addu" data-f="unit"><input name="lec" placeholder="Lecture 标题"><input name="hw" placeholder="对应作业"><button>添加单元</button></form>';
- h+='<div class="foot">'+(S.courses.length>1?'<button data-a="delc"'+(armed==='c'?' class="arm"':'')+'>'+(armed==='c'?'再点一次删除这门课':'删除这门课')+'</button>':'')+
- '<details><summary>备份与恢复</summary><textarea id="bk" aria-label="备份数据">'+esc(JSON.stringify(S))+'</textarea><button data-a="imp">用上面的内容覆盖当前数据</button><span class="msg">'+esc(msg)+'</span></details></div>';
- document.getElementById('app').innerHTML=h;
- msg='';
-}
-document.addEventListener('click',function(e){
- var b=e.target.closest('[data-a]');if(!b)return;
- var a=b.dataset.a,i=+b.dataset.i,c=cur();
- if(a==='tab'){S.active=i;editing=-1;openNote={};armed=''}
- else if(a==='go'){var el=document.getElementById('u'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});return}
- else if(a==='note'){openNote[i]=!openNote[i]}
- else if(a==='ed'){editing=i}
- else if(a==='cx'){editing=-1}
- else if(a==='sv'){var r=b.closest('.row'),u=c.units[i],q=function(n){return r.querySelector('[name='+n+']').value.trim()};
-  u.lec=q('lec');u.lecUrl=url(q('lu'));u.hw=q('hw');u.hwUrl=url(q('hu'));editing=-1;save()}
- else if(a==='del'){if(armed==='u'+i){c.units.splice(i,1);openNote={};armed='';save()}else{armed='u'+i}}
- else if(a==='delc'){if(armed==='c'){S.courses.splice(S.active,1);S.active=0;armed='';save()}else{armed='c'}}
- else if(a==='imp'){try{var d=JSON.parse(document.getElementById('bk').value);
-  if(!d||!Array.isArray(d.courses)||!d.courses.length)throw 0;
-  d.courses.forEach(function(x){if(typeof x.name!=='string'||!Array.isArray(x.units))throw 0;x.units=x.units.map(function(u){return{lec:String(u.lec||''),lecUrl:url(u.lecUrl),hw:String(u.hw||''),hwUrl:url(u.hwUrl),ld:u.ld?1:0,hd:u.hd?1:0,note:String(u.note||'')}})});
-  d.active=0;S=d;editing=-1;openNote={};save()}catch(x){msg='数据格式不对，没有导入。';R();return}}
- else return;
- R();
-});
-document.addEventListener('change',function(e){
- var t=e.target;if(t.dataset.a!=='tg')return;
- cur().units[+t.dataset.i][t.dataset.k]=t.checked?1:0;save();R();
-});
-document.addEventListener('input',function(e){
- var t=e.target;if(t.dataset.a==='nt'){cur().units[+t.dataset.i].note=t.value;save()}
-});
-document.addEventListener('focusout',function(e){
- var t=e.target;if(t.dataset&&t.dataset.a==='title'){var v=t.textContent.trim();if(v){cur().name=v.slice(0,30);save()}R()}
-});
-document.addEventListener('keydown',function(e){
- if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.a==='title'){e.preventDefault();e.target.blur()}
-});
-document.addEventListener('submit',function(e){
- e.preventDefault();var f=e.target,k=f.dataset.f;
- if(k==='course'){var n=f.n.value.trim();if(!n)return;S.courses.push({name:n.slice(0,30),units:[]});S.active=S.courses.length-1;editing=-1;openNote={}}
- else if(k==='unit'){var l=f.lec.value.trim(),w=f.hw.value.trim();if(!l&&!w)return;cur().units.push({lec:l,lecUrl:'',hw:w,hwUrl:'',ld:0,hd:0,note:''})}
- else return;
- save();R();
-});
-R();
-</script>
+  <a class="skip-link button" href="#units">跳到学习单元</a>
+
+  <header class="site-header shell">
+    <div class="header-inner">
+      <p class="brand">课程学习进度</p>
+      <label class="theme-control" for="theme">主题
+        <select id="theme">
+          <option value="system">跟随系统</option>
+          <option value="light">浅色</option>
+          <option value="dark">深色</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main id="app" class="shell"></main>
+
+  <noscript>
+    <p class="shell">
+      请启用 JavaScript，以使用课程进度、笔记及备份功能。
+    </p>
+  </noscript>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // 沿用原数据键和字段，兼容已有进度与备份。
+      const STORAGE_KEY = 'study-system-v1';
+      const THEME_KEY = 'study-system-theme-v1';
+      const app = document.getElementById('app');
+      const themeSelect = document.getElementById('theme');
+
+      const makeUnit = (lec, hw, note = '') => ({
+        lec,
+        lecUrl: '',
+        hw,
+        hwUrl: '',
+        ld: 0,
+        hd: 0,
+        note
+      });
+
+      const seed = [
+        makeUnit('函数与控制流', 'lab00、lab01、hw01'),
+        makeUnit('高阶函数、Lambda、环境图', 'lab02、hw02'),
+        makeUnit('递归、Python 列表', 'lab03；Project Hog'),
+        makeUnit('树递归、数据抽象', 'lab04、hw03'),
+        makeUnit('序列与树', 'hw04'),
+        makeUnit('迭代器、可变性', 'lab05；Project Cats'),
+        makeUnit('生成器', 'hw05'),
+        makeUnit('面向对象', 'lab06'),
+        makeUnit('链表、继承', 'lab07、hw06'),
+        makeUnit('可变树', 'lab08；Project Ants'),
+        makeUnit('Scheme、Scheme 列表', 'lab09、hw07、hw08'),
+        makeUnit(
+          '解释器、程序即数据与宏',
+          'lab10、lab11、hw09；Project Scheme'
+        ),
+        makeUnit('SQL', 'lab12、hw10、hw11')
+      ];
+
+      const escapeHtml = (value) => String(value ?? '').replace(
+        /[&<>"']/g,
+        (char) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[char]
+      );
+
+      const safeUrl = (value) => {
+        const text = String(value || '').trim();
+        if (!/^https?:\/\//i.test(text)) return '';
+
+        try {
+          return ['http:', 'https:'].includes(new URL(text).protocol)
+            ? text
+            : '';
+        } catch {
+          return '';
+        }
+      };
+
+      // 读取和导入共用校验；不直接信任存储中的索引、链接或对象结构。
+      function normalize(data) {
+        if (
+          !data ||
+          !Array.isArray(data.courses) ||
+          !data.courses.length
+        ) {
+          throw new Error('Invalid data');
+        }
+
+        const courses = data.courses.map((course) => {
+          if (
+            !course ||
+            typeof course.name !== 'string' ||
+            !Array.isArray(course.units)
+          ) {
+            throw new Error('Invalid course');
+          }
+
+          return {
+            name: course.name,
+            units: course.units.map((unit) => {
+              if (!unit || typeof unit !== 'object') {
+                throw new Error('Invalid unit');
+              }
+
+              return {
+                lec: String(unit.lec || ''),
+                lecUrl: safeUrl(unit.lecUrl),
+                hw: String(unit.hw || ''),
+                hwUrl: safeUrl(unit.hwUrl),
+                ld: unit.ld ? 1 : 0,
+                hd: unit.hd ? 1 : 0,
+                note: String(unit.note || '')
+              };
+            })
+          };
+        });
+
+        const active = Number.isInteger(data.active)
+          ? Math.max(0, Math.min(data.active, courses.length - 1))
+          : 0;
+
+        return { active, courses };
+      }
+
+      let state;
+
+      try {
+        state = normalize(
+          JSON.parse(localStorage.getItem(STORAGE_KEY))
+        );
+      } catch {
+        state = {
+          active: 0,
+          courses: [{ name: 'CS61A', units: seed }]
+        };
+      }
+
+      let editing = -1;
+      let armed = '';
+      let message = '';
+      let storageMessage = '';
+      let backupDraft = null;
+      let backupOpen = false;
+      let directoryOpen = window.matchMedia(
+        '(min-width: 901px)'
+      ).matches;
+
+      const openNotes = new Set();
+      const current = () => state.courses[state.active];
+
+      function save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          storageMessage = '';
+        } catch {
+          storageMessage =
+            '浏览器未能保存数据，请通过“备份与恢复”复制备份。';
+        }
+
+        const feedback = document.getElementById('storage-status');
+        if (feedback) feedback.textContent = storageMessage;
+      }
+
+      function resetView() {
+        editing = -1;
+        armed = '';
+        openNotes.clear();
+      }
+
+      const actionButton = (action, index, text, extra = '') =>
+        `<button type="button"
+          data-a="${action}"
+          data-i="${index}"
+          data-focus="${action}-${index}"
+          ${extra}>${text}</button>`;
+
+      function renderItem(unit, index, kind) {
+        const lecture = kind === 'lec';
+        const key = lecture ? 'ld' : 'hd';
+        const title = lecture ? unit.lec : unit.hw;
+        const link = safeUrl(
+          lecture ? unit.lecUrl : unit.hwUrl
+        );
+        const label = lecture ? 'Lecture' : '作业';
+
+        return `<div class="col">
+          <span class="mobile-label" aria-hidden="true">
+            ${label}
+          </span>
+          <label class="it ${kind}${unit[key] ? ' done' : ''}">
+            <input type="checkbox"
+              data-a="tg"
+              data-i="${index}"
+              data-k="${key}"
+              data-focus="${key}-${index}"
+              aria-label="单元 ${index + 1} ${label}：${escapeHtml(
+                title || '（未填写）'
+              )}"
+              ${unit[key] ? 'checked' : ''}>
+            <span class="tx">
+              ${escapeHtml(title || '（未填写）')}
+            </span>
+          </label>
+          ${link ? `<a
+            href="${escapeHtml(link)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="打开链接：${escapeHtml(title || label)}"
+          >打开链接</a>` : ''}
+        </div>`;
+      }
+
+      function renderEditor(unit, index) {
+        return `<div class="col ed">
+          <input type="text"
+            name="lec"
+            value="${escapeHtml(unit.lec)}"
+            placeholder="Lecture 标题"
+            aria-label="Lecture 标题"
+            data-focus="edit-${index}">
+          <input type="url"
+            name="lu"
+            value="${escapeHtml(unit.lecUrl)}"
+            placeholder="Lecture 链接（可选）"
+            aria-label="Lecture 链接（可选）">
+        </div>
+        <div class="col ed">
+          <input type="text"
+            name="hw"
+            value="${escapeHtml(unit.hw)}"
+            placeholder="作业标题"
+            aria-label="作业标题">
+          <input type="url"
+            name="hu"
+            value="${escapeHtml(unit.hwUrl)}"
+            placeholder="作业链接（可选）"
+            aria-label="作业链接（可选）">
+        </div>`;
+      }
+
+      function renderUnit(unit, index) {
+        const isEditing = editing === index;
+
+        const controls = isEditing
+          ? actionButton('sv', index, '保存')
+            + actionButton('cx', index, '取消')
+          : actionButton(
+              'note',
+              index,
+              unit.note ? '笔记 •' : '笔记',
+              `aria-expanded="${openNotes.has(index)}"
+               aria-controls="note-${index}"`
+            )
+            + actionButton('ed', index, '编辑')
+            + actionButton(
+              'del',
+              index,
+              armed === `u${index}` ? '再点一次删除' : '删除',
+              armed === `u${index}` ? 'class="arm"' : ''
+            );
+
+        return `<section class="row"
+          id="u${index}"
+          aria-labelledby="heading-${index}">
+          <h3 class="no" id="heading-${index}">
+            <span class="sr-only">单元 </span>${index + 1}
+          </h3>
+          ${isEditing
+            ? renderEditor(unit, index)
+            : renderItem(unit, index, 'lec')
+              + renderItem(unit, index, 'hw')
+          }
+          <div class="tools"
+            role="group"
+            aria-label="单元 ${index + 1} 操作">
+            ${controls}
+          </div>
+          <textarea class="note"
+            id="note-${index}"
+            data-a="nt"
+            data-i="${index}"
+            data-focus="nt-${index}"
+            aria-label="单元 ${index + 1} 笔记"
+            placeholder="记下这个单元的笔记、卡住的地方和待复习的问题"
+            ${openNotes.has(index) ? '' : 'hidden'}
+          >${escapeHtml(unit.note)}</textarea>
+        </section>`;
+      }
+
+      function render(focusKey) {
+        const previousFocus =
+          focusKey || document.activeElement?.dataset.focus;
+
+        const course = current();
+        const units = course.units;
+
+        const done = units.reduce(
+          (total, unit) =>
+            total
+            + Number(Boolean(unit.ld))
+            + Number(Boolean(unit.hd)),
+          0
+        );
+
+        const percent = units.length
+          ? Math.round(done / (2 * units.length) * 100)
+          : 0;
+
+        app.innerHTML = `
+          <section class="overview card"
+            id="overview"
+            aria-labelledby="course-title">
+            <div class="course-bar">
+              <nav class="tabs" aria-label="课程切换">
+                ${state.courses.map((item, index) => `
+                  <button type="button"
+                    class="tab${index === state.active ? ' on' : ''}"
+                    data-a="tab"
+                    data-i="${index}"
+                    data-focus="tab-${index}"
+                    aria-pressed="${index === state.active}"
+                  >${escapeHtml(item.name)}</button>
+                `).join('')}
+              </nav>
+
+              <form class="addc"
+                data-f="course"
+                aria-label="添加课程">
+                <input type="text"
+                  name="n"
+                  placeholder="新课程名称"
+                  maxlength="30"
+                  aria-label="新课程名称"
+                  required
+                  data-focus="new-course">
+                <button type="submit">添加课程</button>
+              </form>
+            </div>
+
+            <h1 id="course-title"
+              class="course-title"
+              contenteditable="true"
+              spellcheck="false"
+              data-a="title"
+              aria-label="课程名称，点击可修改"
+              title="课程名称，点击可修改"
+            >${escapeHtml(course.name)}</h1>
+
+            <p class="sum" role="status">
+              已完成 ${done} / ${2 * units.length} 项，共 ${percent}%
+            </p>
+
+            <progress class="progress"
+              value="${done}"
+              max="${2 * units.length || 1}"
+              aria-label="课程完成进度"
+            >${percent}%</progress>
+
+            <div class="strip"
+              role="group"
+              aria-label="单元进度导航">
+              ${units.map((unit, index) => `
+                <button type="button"
+                  class="cell"
+                  data-a="go"
+                  data-i="${index}"
+                  title="单元 ${index + 1}：${escapeHtml(unit.lec)}"
+                  aria-label="跳到单元 ${index + 1}，Lecture ${
+                    unit.ld ? '已完成' : '未完成'
+                  }，作业${unit.hd ? '已完成' : '未完成'}">
+                  <i class="lecture${unit.ld ? ' f' : ''}"
+                    aria-hidden="true"></i>
+                  <i class="homework${unit.hd ? ' f' : ''}"
+                    aria-hidden="true"></i>
+                  <span class="cell-number" aria-hidden="true">
+                    ${index + 1}
+                  </span>
+                </button>
+              `).join('')}
+            </div>
+
+            <p class="legend">每一格是一个单元：上半是 Lecture<span
+              class="dot lec" aria-hidden="true"></span>下半是作业<span
+              class="dot hw" aria-hidden="true"></span>填色表示已完成</p>
+
+            <p id="storage-status" class="msg" role="status">
+              ${escapeHtml(storageMessage)}
+            </p>
+          </section>
+
+          <div class="workspace">
+            <aside class="directory card" aria-label="学习导航">
+              <details id="directory" ${directoryOpen ? 'open' : ''}>
+                <summary>单元目录</summary>
+                <nav aria-label="单元目录">
+                  <ol>
+                    ${units.map((unit, index) => `
+                      <li>
+                        <a href="#u${index}">
+                          <span class="index">${index + 1}</span>
+                          <span>${escapeHtml(
+                            unit.lec || '（未填写）'
+                          )}</span>
+                        </a>
+                      </li>
+                    `).join('')}
+                  </ol>
+                  <div class="quick-links">
+                    <a href="#overview">课程概览</a>
+                    <a href="#add-unit">添加单元</a>
+                    <a href="#backup" data-a="backup">备份与恢复</a>
+                  </div>
+                </nav>
+              </details>
+            </aside>
+
+            <div class="content">
+              <section class="units-panel card"
+                id="units"
+                aria-labelledby="units-title">
+                <div class="section-heading">
+                  <h2 id="units-title" tabindex="-1">学习单元</h2>
+                  <a href="#add-unit">添加单元</a>
+                </div>
+
+                ${units.length ? `
+                  <div class="row hd" aria-hidden="true">
+                    <span></span>
+                    <span><span class="dot lec"></span>Lecture</span>
+                    <span><span class="dot hw"></span>作业</span>
+                    <span></span>
+                  </div>
+                  ${units.map(renderUnit).join('')}
+                ` : `
+                  <p class="empty">这门课还没有单元。在下面填写第一个 Lecture 和对应的作业。</p>
+                `}
+              </section>
+
+              <section class="add-panel card"
+                id="add-unit"
+                aria-labelledby="add-title">
+                <h2 id="add-title">添加单元</h2>
+                <form class="addu"
+                  data-f="unit"
+                  aria-label="添加单元">
+                  <input type="text"
+                    name="lec"
+                    placeholder="Lecture 标题"
+                    aria-label="Lecture 标题"
+                    data-focus="new-unit">
+                  <input type="text"
+                    name="hw"
+                    placeholder="对应作业"
+                    aria-label="对应作业">
+                  <button type="submit" class="primary">
+                    添加单元
+                  </button>
+                </form>
+              </section>
+
+              <footer class="backup-panel card foot" id="backup">
+                ${state.courses.length > 1
+                  ? actionButton(
+                      'delc',
+                      0,
+                      armed === 'c'
+                        ? '再点一次删除这门课'
+                        : '删除这门课',
+                      armed === 'c' ? 'class="arm"' : ''
+                    )
+                  : ''
+                }
+                <details id="backup-details"
+                  ${backupOpen ? 'open' : ''}>
+                  <summary>备份与恢复</summary>
+                  <textarea id="bk"
+                    aria-label="备份数据"
+                    spellcheck="false"
+                    data-focus="backup-data"
+                  >${escapeHtml(
+                    backupDraft ?? JSON.stringify(state)
+                  )}</textarea>
+                  <button type="button"
+                    data-a="imp"
+                    data-focus="import"
+                  >用上面的内容覆盖当前数据</button>
+                  <p class="msg" role="status">${escapeHtml(message)}</p>
+                </details>
+              </footer>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('directory')
+          .addEventListener('toggle', (event) => {
+            if (event.target.isConnected) {
+              directoryOpen = event.target.open;
+            }
+          });
+
+        document.getElementById('backup-details')
+          .addEventListener('toggle', (event) => {
+            if (event.target.isConnected) {
+              backupOpen = event.target.open;
+            }
+          });
+
+        if (previousFocus) {
+          [...app.querySelectorAll('[data-focus]')]
+            .find(
+              (element) => element.dataset.focus === previousFocus
+            )
+            ?.focus({ preventScroll: true });
+        }
+      }
+
+      // 在容器上代理事件，重新绘制后无需逐个重新绑定按钮。
+      app.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-a]');
+        if (!button || !app.contains(button)) return;
+
+        const action = button.dataset.a;
+        const index = Number(button.dataset.i);
+        const course = current();
+        let focusKey;
+
+        if (action === 'tab') {
+          state.active = index;
+          resetView();
+          save();
+          focusKey = `tab-${index}`;
+
+        } else if (action === 'go') {
+          document.getElementById(`u${index}`)?.scrollIntoView({
+            behavior: window.matchMedia(
+              '(prefers-reduced-motion: reduce)'
+            ).matches ? 'instant' : 'smooth',
+            block: 'center'
+          });
+
+          const heading = document.getElementById(`heading-${index}`);
+          if (heading) {
+            heading.tabIndex = -1;
+            heading.focus({ preventScroll: true });
+          }
+          return;
+
+        } else if (action === 'backup') {
+          document.getElementById('backup-details').open = true;
+          backupOpen = true;
+          return;
+
+        } else if (action === 'note') {
+          if (openNotes.has(index)) {
+            openNotes.delete(index);
+          } else {
+            openNotes.add(index);
+          }
+
+          const note = document.getElementById(`note-${index}`);
+          note.hidden = !openNotes.has(index);
+          button.setAttribute('aria-expanded', String(!note.hidden));
+
+          if (!note.hidden) {
+            note.focus({ preventScroll: true });
+          }
+          return;
+
+        } else if (action === 'ed') {
+          editing = index;
+          armed = '';
+          focusKey = `edit-${index}`;
+
+        } else if (action === 'cx') {
+          editing = -1;
+          focusKey = `ed-${index}`;
+
+        } else if (action === 'sv') {
+          const row = button.closest('.row');
+          const value = (name) =>
+            row.querySelector(`[name="${name}"]`).value.trim();
+
+          Object.assign(course.units[index], {
+            lec: value('lec'),
+            lecUrl: safeUrl(value('lu')),
+            hw: value('hw'),
+            hwUrl: safeUrl(value('hu'))
+          });
+
+          editing = -1;
+          save();
+          focusKey = `ed-${index}`;
+
+        } else if (action === 'del') {
+          if (armed === `u${index}`) {
+            course.units.splice(index, 1);
+            resetView();
+            save();
+
+            focusKey = course.units.length
+              ? `ed-${Math.min(index, course.units.length - 1)}`
+              : 'new-unit';
+          } else {
+            armed = `u${index}`;
+          }
+
+        } else if (action === 'delc') {
+          if (state.courses.length < 2) return;
+
+          if (armed === 'c') {
+            state.courses.splice(state.active, 1);
+            state.active = 0;
+            resetView();
+            save();
+            focusKey = 'tab-0';
+          } else {
+            armed = 'c';
+          }
+
+        } else if (action === 'imp') {
+          backupDraft = document.getElementById('bk').value;
+          backupOpen = true;
+
+          try {
+            const imported = normalize(JSON.parse(backupDraft));
+            imported.active = 0;
+            state = imported;
+            resetView();
+            backupDraft = null;
+            message = '数据已恢复。';
+            save();
+          } catch {
+            message = '数据格式不对，没有导入。';
+          }
+
+          focusKey = 'import';
+
+        } else {
+          return;
+        }
+
+        render(focusKey);
+      });
+
+      app.addEventListener('change', (event) => {
+        const target = event.target;
+        if (target.dataset.a !== 'tg') return;
+
+        current().units[Number(target.dataset.i)][target.dataset.k] =
+          target.checked ? 1 : 0;
+
+        save();
+        render();
+      });
+
+      app.addEventListener('input', (event) => {
+        const target = event.target;
+
+        if (target.dataset.a === 'nt') {
+          const index = Number(target.dataset.i);
+          current().units[index].note = target.value;
+          save();
+
+          const noteButton = app.querySelector(
+            `[data-a="note"][data-i="${index}"]`
+          );
+
+          if (noteButton) {
+            noteButton.textContent = target.value ? '笔记 •' : '笔记';
+          }
+
+          if (backupDraft === null) {
+            document.getElementById('bk').value = JSON.stringify(state);
+          }
+
+        } else if (target.id === 'bk') {
+          backupDraft = target.value;
+        }
+      });
+
+      // 课程名失焦时只更新关联文字，不重建页面，避免吞掉接下来的点击。
+      app.addEventListener('focusout', (event) => {
+        const target = event.target;
+        if (target.dataset.a !== 'title') return;
+
+        const name = target.textContent.trim();
+        if (name) current().name = name.slice(0, 30);
+
+        target.textContent = current().name;
+
+        app.querySelector(
+          `[data-a="tab"][data-i="${state.active}"]`
+        ).textContent = current().name;
+
+        save();
+
+        if (backupDraft === null) {
+          document.getElementById('bk').value = JSON.stringify(state);
+        }
+      });
+
+      app.addEventListener('keydown', (event) => {
+        if (
+          event.key === 'Enter' &&
+          !event.isComposing &&
+          event.target.dataset.a === 'title'
+        ) {
+          event.preventDefault();
+          event.target.blur();
+        }
+
+        if (
+          event.key === 'Escape' &&
+          editing !== -1 &&
+          event.target.closest('.row')
+        ) {
+          const index = editing;
+          editing = -1;
+          render(`ed-${index}`);
+        }
+      });
+
+      app.addEventListener('submit', (event) => {
+        const form = event.target;
+        const kind = form.dataset.f;
+        if (!kind) return;
+
+        event.preventDefault();
+        let focusKey;
+
+        if (kind === 'course') {
+          const name = form.elements.namedItem('n').value.trim();
+          if (!name) return;
+
+          state.courses.push({
+            name: name.slice(0, 30),
+            units: []
+          });
+          state.active = state.courses.length - 1;
+
+          resetView();
+          focusKey = 'new-unit';
+
+        } else if (kind === 'unit') {
+          const lecture =
+            form.elements.namedItem('lec').value.trim();
+          const homework =
+            form.elements.namedItem('hw').value.trim();
+
+          if (!lecture && !homework) return;
+
+          current().units.push(makeUnit(lecture, homework));
+          focusKey = 'new-unit';
+
+        } else {
+          return;
+        }
+
+        save();
+        render(focusKey);
+      });
+
+      try {
+        const theme = localStorage.getItem(THEME_KEY);
+        themeSelect.value = ['light', 'dark'].includes(theme)
+          ? theme
+          : 'system';
+      } catch {
+        themeSelect.value = 'system';
+      }
+
+      themeSelect.addEventListener('change', () => {
+        const theme = themeSelect.value;
+
+        if (theme === 'system') {
+          delete document.documentElement.dataset.theme;
+        } else {
+          document.documentElement.dataset.theme = theme;
+        }
+
+        try {
+          localStorage.setItem(THEME_KEY, theme);
+        } catch {
+          /* 主题仍对当前页面生效。 */
+        }
+      });
+
+      render();
+    })();
+  </script>
 </body>
 </html>
